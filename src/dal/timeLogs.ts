@@ -1,3 +1,5 @@
+import { db, NewTimeLog } from '../db/database.js';
+
 // TODO: Student implementation - Part 2: DAL for time logs
 
 export async function insertTimeLog(
@@ -6,11 +8,28 @@ export async function insertTimeLog(
   hours: number,
 ): Promise<any> {
   // TODO: Student implementation
+  const newTimeLog: NewTimeLog = {
+    ticket_id: ticketId,
+    user_id: userId,
+    hours,
+  };
+
+  return await db
+    .insertInto('time_logs')
+    .values(newTimeLog)
+    .returningAll()
+    .executeTakeFirstOrThrow();
 }
 
 export async function getTotalHoursForTicket(
   ticketId: number,
 ): Promise<number> {
   // TODO: Student implementation
-  return 0;
+  const result = await db
+    .selectFrom('time_logs')
+    .select((eb) => eb.fn.sum<number>('hours').as('total_hours'))
+    .where('ticket_id', '=', ticketId)
+    .executeTakeFirst();
+
+  return Number(result?.total_hours ?? 0);
 }
